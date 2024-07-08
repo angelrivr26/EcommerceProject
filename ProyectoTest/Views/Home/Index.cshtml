@@ -1,0 +1,256 @@
+﻿@@{
+    ViewBag.Title = "Home Page";
+
+}
+
+<div class="row">
+
+
+    @*Agregado*@
+    <div class="row mt-5 pt-4">
+        <h1>Gestionar Pedidos</h1>
+        <div class="col-12">
+            <div class="mb-3">
+                <br>
+                <h4>Filtrar por estado:</h4>
+                <select id="filtroEstado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="Pendiente">Pendientes</option>
+                    <option value="Recibido">Recibidos</option>
+                    <option value="Entregado">Entregados</option>
+                    <option value="Rechazado">Rechazados</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body bg-secondary">
+
+                    <div class="accordion" id="accordion_articulos">
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+@section scripts{
+
+    <script>
+
+
+        //AGREGADO
+        function zeroFill(number, width) {
+            width -= number.toString().length;
+            if (width > 0) {
+                return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
+            }
+            return number + ""; // always return a string
+        }
+
+
+
+        $(document).ready(function () {
+            jQuery.ajax({
+                url: '@Url.Action("ObtenerCompra", "Tienda")',
+                type: "GET",
+                data: null,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    console.log(data)
+                    if (data.lista != null) {
+                        $.each(data.lista, function (i, v) {
+                            var accordion_item = $("<div>").addClass("accordion-item");
+
+                            var accordion_header = $("<div>").addClass("accordion-header").append(
+                                $("<div>").addClass("accordion-button collapsed").attr({ "data-bs-toggle": "collapse", "data-bs-target": "#collapse" + i, "aria-expanded": "false" }).append(
+                                    $("<div>").addClass("d-flex justify-content-between w-100").append(
+                                        $("<div>").text("N° " + zeroFill(i + 1, 6)),
+                                        $("<div>").addClass("me-4").text("Fecha Compra: " + v.FechaTexto),
+                                        $("<div>").addClass("me-4").text("Nombre: " + v.Nombre),
+
+                                    )
+                                )
+                            );
+                            var accordion_collapse = $("<div>").attr({ "id": "collapse" + i }).addClass("accordion-collapse collapse");
+
+                            var accordion_body = $("<div>").addClass("accordion-body").append(
+                                $("<div>").addClass("d-flex justify-content-between w-100").append(
+                                    $("<div>").addClass("me-4").text("Correo: " + v.Correo),
+                                    $("<div>").addClass("me-4").text("Referencia: " + v.Referencia),
+                                    $("<div>").addClass("me-4").text("F.Pago: " + v.FormaPago),
+                                    $("<div>").addClass("me-4").text("Teléfono: " + v.Telefono),
+                                    $("<div>").addClass("me-4").text("Fact: " + v.DocumentoFacturacion)
+                                )
+                            );
+
+
+
+                            $.each(v.oDetalleCompra, function (x, dc) {
+                                var d_flex = $("<div>").addClass("d-flex flex-row border p-2").append(
+                                    $("<img>").attr({ "src": "data:image/" + dc.oProducto.extension + ";base64," + dc.oProducto.base64, "width": "50" }),
+                                    $("<div>").addClass("p-2 bd-highlight").text(dc.oProducto.Nombre),
+                                    $("<div>").addClass("p-2 bd-highlight ms-auto").text("Cantidad: " + dc.Cantidad),
+                                    $("<div>").addClass("p-2 bd-highlight ms-auto").text("Adicionales: " + dc.Adicionales),
+                                    $("<div>").addClass("p-2 bd-highlight").text("Total: S/. " + dc.Total)
+
+                                )
+                                accordion_body.append(d_flex);
+
+                            });
+
+                            accordion_body.append(
+                                $("<div>").addClass("d-flex justify-content-between bg-light border").append(
+                                    $("<div>").addClass("p-2 bd-highlight").text("Total Importe:"),
+                                    $("<div>").addClass("p-2 bd-highlight").text("S/. " + v.Total)
+                                )
+                            );
+
+                            accordion_collapse.append(accordion_body);
+
+                            accordion_item.append(accordion_header);
+                            accordion_item.append(accordion_collapse);
+
+
+                            $("#accordion_articulos").append(accordion_item);
+                        });
+
+                    }
+                },
+                error: function (error) {
+                    console.log(error)
+                },
+                beforeSend: function () {
+                    $(".modal-body").LoadingOverlay("show");
+                },
+            });
+        })
+
+
+
+
+
+
+        //AGREGADO
+
+
+         //AGREGADO 1
+        function cambiarEstadoPedido(idCompra, nuevoEstado) {
+            $.ajax({
+                url: '@Url.Action("CambiarEstadoCompra", "Tienda")',
+                type: "POST",
+                data: { idCompra: idCompra, nuevoEstado: nuevoEstado },
+                dataType: "json",
+                success: function (data) {
+                    if (data.success) {
+                        // Si la actualización en la base de datos fue exitosa,
+                        // actualizamos el estado en la vista también.
+                        var targetAccordion = $("#collapse" + idCompra);
+                        targetAccordion.prev().find(".estado-compra").text(nuevoEstado);
+
+                        // Obtener la clase de color correspondiente al botón seleccionado
+                        var colorClass = "";
+                        if (nuevoEstado === "Recibido") {
+                            colorClass = "btn-primary";
+                        } else if (nuevoEstado === "Entregado") {
+                            colorClass = "btn-success";
+                        } else if (nuevoEstado === "Rechazado") {
+                            colorClass = "btn-danger";
+                        }
+
+                        // Actualizar la clase del elemento "estado-compra" del accordion_header
+                        targetAccordion.prev().find(".estado-compra").removeClass("btn-primary btn-success btn-danger").addClass(colorClass);
+                    } else {
+                        alert("Error al actualizar el estado del pedido.");
+                    }
+                },
+                error: function (error) {
+                    alert("Error de conexión. Inténtalo de nuevo más tarde.");
+                }
+            });
+        }
+
+
+        //AGREGADO 2
+        function obtenerPreciosPago() {
+            var total = 0;
+            $("input.input-cantidad").each(function (index) {
+                var idProducto = $(this).data("idproducto");
+                var precioTotalProducto = parseFloat(sessionStorage.getItem('precioTotalCarrito_' + idProducto));
+                var cantidad = parseInt($(this).val());
+                var precio = precioTotalProducto * cantidad;
+                total += precio;
+            });
+            $("#totalPagar").text("S/. " + total.toFixed(2)); // Utilizamos toFixed(2) para mostrar dos decimales en el total.
+        }
+
+        $(document).ready(function () {
+            jQuery.ajax({
+                url: '@Url.Action("ListarProducto", "Home")',
+                type: "GET",
+                data: null,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+
+                    if (data.data != null) {
+                        $("#total-productos").text(data.data.length);
+                    }
+                },
+                error: function (error) {
+                    console.log(error)
+                },
+                beforeSend: function () {
+
+                },
+            });
+
+             jQuery.ajax({
+                url: '@Url.Action("ListarMarca", "Home")',
+                type: "GET",
+                data: null,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (data.data != null) {
+                        $("#total-marcas").text(data.data.length);
+                    }
+                },
+                error: function (error) {
+                    console.log(error)
+                },
+                beforeSend: function () {
+
+                },
+            });
+
+             jQuery.ajax({
+                url: '@Url.Action("ListarCategoria", "Home")',
+                type: "GET",
+                data: null,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                   if (data.data != null) {
+                        $("#total-categorias").text(data.data.length);
+                    }
+                },
+                error: function (error) {
+                    console.log(error)
+                },
+                beforeSend: function () {
+
+                },
+            });
+
+
+        })
+    </script>
+
+}

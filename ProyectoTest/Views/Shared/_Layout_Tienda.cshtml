@@ -1,0 +1,203 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Tienda</title>
+    @Styles.Render("~/Content/css")
+    @Styles.Render("~/Content/PluginsCSS")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+
+<style>
+    nav {
+        background: ;
+        min-height: 100px;
+    }
+</style>
+
+
+<body>
+    <header class="width=100%">
+        <div class="">
+            @*<p class="text-light fs-6 mt-2 mb-2">Contáctanos 1-(51)-955-456100</p>*@
+            
+            <a class="navbar-brand w-auto" href="#">
+                <img width="100%" src="@Url.Content("~/Imagenes/LongHorn/banner.jpg")" />
+            </a>
+        </div>
+    </header>
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-none sticky-top text-danger height:100px">
+        <div class="container">
+
+            <!-- Navbar Brand-->
+            <a class="navbar-brand" href="#">
+                <img class="" width="200" src="@Url.Content("~/Imagenes/LongHorn/650x150LogoLargo.png")" />
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <div class="d-flex align-items-center">
+
+                            @*Mostrar tienda*@
+                            <button class="btn btn-danger btn-ver-categoria" id="sidebarToggle" href="#!">
+                                <i class="fas fa-bars"></i> Ver Categorias
+                            </button>
+
+                            <!-- Nombre Recojo o Delivery -->
+                            <div class="p-2 mt-2">
+                                <h5 class="lead fw-normal text-white" id="idcompra"></h5>
+                            </div>
+
+                            <a class="btn btn-warning" href="@Url.Action("Reserva", "Reserva")" role="button">Reserva</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            
+            <!-- Navbar-->
+            @{
+                if (((ProyectoTest.Models.Usuario)Session["Usuario"]).EsAdministrador == false)
+                {
+                    <form action="@Url.Action("Carrito","Tienda")" method="post" class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+                        <button class="btn btn-close-white" type="submit">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="badge bg-dark text-white ms-1 rounded-pill contador-carrito">0</span>
+                        </button>
+                    </form>
+
+                    <ul class="navbar-nav me-2">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="@Url.Action("Index","Tienda")">Ir a Tienda</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Compras","Tienda")">Mis Compras</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" href="@Url.Action("CerrarSesion","Tienda")">Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                }
+            }
+
+        </div>
+    </nav>
+
+    <main class="container-fluid p-0 m-0">
+        @RenderBody()
+    </main>
+
+    <div class="position-fixed top-0 end-0 p-3 mt-5" style="z-index: 5">
+        <div id="toast-carrito" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-body bg-success text-white">
+                <div class="d-flex">
+                    <i class="fas fa-check fa-2x"></i> <label style="margin-left: 10px !important">Se añadió al carrito!</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3 mt-5" style="z-index: 5">
+        <div id="toast-alerta" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-body bg-danger text-white">
+                <div class="d-flex">
+                    <i class="fas fa-exclamation-circle fa-2x"></i> <label id="mensaje-error" class="ml-2" style="margin-left: 10px !important">Error</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-50 start-50 translate-middle" style="z-index: 9999;">
+        <div id="toast-carrito2" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-body bg-warning  text-black">
+                <div class="d-flex">
+                    <i class="fas fa-check fa-2x"></i> <label style="margin-left: 10px !important"> ESTÁS FUERA DE COBERTURA DEL DELIVERY. <br> PUEDES UTILIZAR RECOJO EN TIENDA</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-50 start-50 translate-middle" style="z-index: 9999">
+        <div id="toast-carrito3" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-body bg-success text-white">
+                <div class="d-flex">
+                    <i class="fas fa-check fa-2x"></i> <label style="margin-left: 10px !important"> ESTÁS DENTRO DE COBERTURA. <br> PUEDES HACER TU PEDIDO</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/Content/PluginsJS")
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+    <script>
+
+            $(document).ready(function () {
+                obtenerCantidad();
+            })
+            function obtenerCantidad() {
+                jQuery.ajax({
+                    url: '@Url.Action("CantidadCarrito", "Tienda")',
+                    type: "GET",
+                    data: null,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        $(".contador-carrito").text(data.respuesta);
+                    },
+                    error: function (error) {
+                        console.log(error)
+                    },
+                    beforeSend: function () {
+
+                    },
+                });
+
+            }
+            $(document).on('click', '.btn-agregar-carrito', function (event) {
+
+                var request = {
+                    oCarrito: {
+                        oProducto: { IdProducto: $(this).data("idproducto")  }
+                    }
+                }
+
+                jQuery.ajax({
+                    url: '@Url.Action("InsertarCarrito", "Tienda")',
+                    type: "POST",
+                    data: JSON.stringify(request),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        var actual = parseInt($(".contador-carrito").text());
+                        if (data.respuesta != 0) {
+                            actual = actual + 1;
+                            $(".contador-carrito").text(actual);
+                            $('#toast-carrito').toast('show');
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error)
+                    },
+                    beforeSend: function () {
+
+                    },
+                });
+
+            });
+
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
